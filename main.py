@@ -3,8 +3,8 @@ import cv2
 
 def main():
     # 打开四个相机
-    num_cameras = 4
-    caps = [cv2.VideoCapture(i) for i in range(num_cameras)]
+    num_cameras = 3
+    caps = [cv2.VideoCapture(i+1) for i in range(num_cameras)]
 
     # 设置相机分辨率为1920x1080
     for cap in caps:
