@@ -1,7 +1,10 @@
 import cv2
+from ultralytics import YOLO
 
 
 def main():
+    # Load the YOLOv8 model
+    model = YOLO(r'D:\workingSpace\Projects\train240502\runs\detect\train\weights\best.pt')
     # 打开默认相机
     cap = cv2.VideoCapture(1)
 
@@ -25,9 +28,14 @@ def main():
 
         # 缩小图像以适应屏幕大小
         resized_frame = cv2.resize(frame, (960, 540))
+        results = model(resized_frame)
+        if len(results[0].boxes.xyxy.tolist()) != 0:
+            print(f"相机编号{1}")
+        # Visualize the results on the frame
+        annotated_frame = results[0].plot()
 
-        # 显示缩小后的图像
-        cv2.imshow('Camera', resized_frame)
+        # Display the annotated frame
+        # cv2.imshow("YOLOv8 Inference", annotated_frame)
 
         # 检查是否按下了'q'键，如果是则退出循环
         if cv2.waitKey(1) & 0xFF == ord('q'):
