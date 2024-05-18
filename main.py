@@ -5,6 +5,7 @@ from ultralytics import YOLO
 
 import camera
 import processing
+import visualization
 
 
 # 主函数
@@ -17,19 +18,14 @@ def main():
     prev_time = time.time()
     # 顺序处理每个相机
     while True:
-        for i, cap in enumerate(camera_manager.caps, start=1):
-            frame_processor.get_frame(cap)
-            if frame_processor.frame is None:
-                continue
-            frame_processor.process_frame(i, camera.CAMERA_ANGLES[i])
-
+        annotated_frames = frame_processor.run_processing(camera_manager.caps, camera.CAMERA_ANGLES)
+        visualization.display_multiple_cameras(annotated_frames, (frame_processor.height, frame_processor.width),
+                                               "Cameras", (2, 2))
         # 等待按键输入，如果按下 'q' 键则退出循环
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-
     # 关闭所有相机
     camera_manager.turn_off_cameras()
-
     # 关闭所有打开的窗口
     cv2.destroyAllWindows()
 
