@@ -35,7 +35,7 @@ def main():
         annotated_frame = results[0].plot()
 
         # Display the annotated frame
-        # cv2.imshow("YOLOv8 Inference", annotated_frame)
+        cv2.imshow("YOLOv8 Inference", annotated_frame)
 
         # 检查是否按下了'q'键，如果是则退出循环
         if cv2.waitKey(1) & 0xFF == ord('q'):
