@@ -1,7 +1,11 @@
 import cv2
 
+# 定义相机的中轴角度
+CAMERA_ANGLES = [0, 90, 180, 270]
+
+
 class CameraManager:
-    def __init__(self, num_cameras=4, width=640, height=480):
+    def __init__(self, num_cameras=4, img_shape=(640, 480)):
         """
         初始化相机管理器。
 
@@ -11,13 +15,12 @@ class CameraManager:
             height (int): 相机的帧高度。
         """
         self.num_cameras = num_cameras
-        self.width = width
-        self.height = height
+        self.width, self.height = img_shape
         self.caps, self.errors = self.turn_on_cameras()
         if self.errors:
             print(f"以下相机未能成功打开: {self.errors}")
         else:
-            print("所有相机成功打开")
+            print("相机已全部开启。")
 
     def turn_on_cameras(self):
         """
@@ -27,7 +30,7 @@ class CameraManager:
             caps (list): 包含所有成功打开的相机对象的列表。
             errors (list): 包含未能成功打开的相机索引的列表。
         """
-        caps = [cv2.VideoCapture(i) for i in range(1, self.num_cameras + 1)]
+        caps = [cv2.VideoCapture(i) for i in range(self.num_cameras, 0, -1)]
         errors = []
 
         for cap in caps:
@@ -44,6 +47,7 @@ class CameraManager:
         """关闭所有相机"""
         for cap in self.caps:
             cap.release()
+
 
 # 示例使用
 if __name__ == "__main__":

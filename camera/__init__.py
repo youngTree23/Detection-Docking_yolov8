@@ -1,2 +1,2 @@
 from .camera_manager import CameraManager
-from .camera_parameters import CAMERA_ANGLES
+from .camera_manager import CAMERA_ANGLES
