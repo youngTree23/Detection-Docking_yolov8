@@ -6,7 +6,7 @@ import numpy as np
 
 
 class FrameProcessor:
-    def __init__(self, model, img_shape, buffer_size=5, azimuth_threshold=10):
+    def __init__(self, model, img_shape, buffer_size=5, azimuth_threshold=20):
         self.model = model
         self.frame = None
         self.previous_time = time.time()
@@ -46,21 +46,26 @@ class FrameProcessor:
         fps = self.calculate_fps()
         cv2.putText(frame, f"FPS: {int(fps)}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
-    def process_frame(self, camera_idx):
+    def process_frame(self, camera_idx, camera_angle, azimuths: list):
         if self.frame is None:
             return np.zeros((self.img_height, self.img_width, 3), np.uint8), None
         # 初始化 annotated_frame
         results = self.model.predict(self.frame, conf=0.7, device='cpu', max_det=1)
         result = results[0]
-        xyxy = None
+        xywh = None
         annotated_frame = result.plot()
-        if len(result.boxes.xyxy) > 0:
-            conf = result.boxes.conf.item() if result.boxes.conf is not None else None
-            xyxy = result.boxes.xyxy.squeeze().tolist() if result.boxes.xyxy is not None else None
-            print(f"{camera_idx}号相机检测到目标，置信度{np.round(conf, 2)}")
-
+        if len(result.boxes.xywh) > 0:
+            conf = result.boxes.conf.item()
+            xywh = result.boxes.xywh.squeeze().tolist()
+            x_center, y_center = xywh[0], xywh[1]
+            box_w = xywh[2]
+            cv2.circle(annotated_frame, (int(x_center), int(y_center)), 10, (255, 0, 0), -1)
+            print(f"{camera_idx + 1}号相机检测到目标，置信度{np.round(conf, 2)}")
+            angle = self.calculate_azimuth(x_center, camera_angle)
+            if self.is_valid_azimuth(angle):
+                azimuths.append(angle)
         self.overlay_fps(annotated_frame)
-        return annotated_frame, xyxy
+        return annotated_frame
 
     def process_multiple_cameras(self, caps, camera_angles):
         annotated_frames = []
@@ -68,11 +73,7 @@ class FrameProcessor:
         for i, cap in enumerate(caps):
             self.capture_frame(cap)
             if self.current_frame is not None:
-                annotated_frame, xyxy = self.process_frame(i)
-                if xyxy is not None:
-                    angle = self.calculate_azimuth(xyxy, camera_angles[i])
-                    if self.is_valid_azimuth(angle):
-                        azimuths.append(angle)
+                annotated_frame = self.process_frame(i, camera_angles[i], azimuths)
                 annotated_frames.append(annotated_frame)
             else:
                 annotated_frames.append(np.zeros((self.img_height, self.img_width, 3), np.uint8))
@@ -83,9 +84,8 @@ class FrameProcessor:
             return annotated_frames, azimuth
         return annotated_frames, None
 
-    def calculate_azimuth(self, xyxy, camera_angle):
+    def calculate_azimuth(self, x_center, camera_angle):
         img_width = self.img_width
-        x_center = (xyxy[0] + xyxy[2]) / 2
         theta = ((x_center - (img_width / 2)) / img_width * 135) + camera_angle
         return theta
 

@@ -5,7 +5,7 @@ CAMERA_ANGLES = [0, 90, 180, 270]
 
 
 class CameraManager:
-    def __init__(self, num_cameras=4, img_shape=(640, 480)):
+    def __init__(self, num_cameras, img_shape):
         """
         初始化相机管理器。
 
@@ -30,7 +30,8 @@ class CameraManager:
             caps (list): 包含所有成功打开的相机对象的列表。
             errors (list): 包含未能成功打开的相机索引的列表。
         """
-        caps = [cv2.VideoCapture(i) for i in range(self.num_cameras, 0, -1)]
+        caps = [cv2.VideoCapture(0), cv2.VideoCapture(2), cv2.VideoCapture(3), cv2.VideoCapture(4)]
+
         errors = []
 
         for cap in caps:
