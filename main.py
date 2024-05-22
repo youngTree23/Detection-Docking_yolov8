@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 from ultralytics import YOLO
 
 from camera import CameraManager, CAMERA_ANGLES
@@ -18,7 +19,7 @@ def main():
                                                  (frame_processor.img_height, frame_processor.img_width),
                                                  "Cameras", (2, 2))
         if azimuth is not None:
-            print(f"目标方位角：{azimuth}")
+            print(f"目标方位角：{np.round(azimuth, 2)}度")
         frame_processor.clear_azimuth_buffer()  # 每循环50次清空方位角缓存区
         # 等待按键输入，如果按下 'q' 键则退出循环
         if cv2.waitKey(1) & 0xFF == ord('q'):
