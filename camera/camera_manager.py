@@ -2,8 +2,8 @@ import cv2
 
 # 定义相机的中轴角度
 CAMERA_ANGLES = [0, 90, 180, 270]
-
-
+FOCAL_LENGTH_MM = 2.2
+SENSOR_WIDTH_MM = 18.44
 class CameraManager:
     def __init__(self, num_cameras, img_shape):
         """

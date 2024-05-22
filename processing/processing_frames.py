@@ -4,6 +4,8 @@ from collections import deque
 import cv2
 import numpy as np
 
+from camera import FOCAL_LENGTH_MM, SENSOR_WIDTH_MM
+
 
 class FrameProcessor:
     def __init__(self, model, img_shape, buffer_size=5, azimuth_threshold=20):
@@ -58,12 +60,14 @@ class FrameProcessor:
             conf = result.boxes.conf.item()
             xywh = result.boxes.xywh.squeeze().tolist()
             x_center, y_center = xywh[0], xywh[1]
-            box_w = xywh[2]
+            w_pixel = xywh[2]
             cv2.circle(annotated_frame, (int(x_center), int(y_center)), 10, (255, 0, 0), -1)
-            print(f"{camera_idx + 1}号相机检测到目标，置信度{np.round(conf, 2)}")
             angle = self.calculate_azimuth(x_center, camera_angle)
             if self.is_valid_azimuth(angle):
                 azimuths.append(angle)
+            distance = self.estimate_distance(w_pixel)
+            print("********************")
+            print(f"{camera_idx + 1}号相机检测到目标，\n置信度为{np.round(conf, 2)},\n大致距离为{distance}m")
         self.overlay_fps(annotated_frame)
         return annotated_frame
 
@@ -96,6 +100,25 @@ class FrameProcessor:
             if abs(azimuth - new_azimuth) < self.azimuth_threshold:
                 return True
         return False
+
+    def estimate_distance(self, w_pixels, w_actual=1.6):
+        """
+        估算目标物体距离的函数
+
+        参数:
+        - W_actual: 目标物体的实际宽度，以米为单位
+        - W_pixels: bounding box的水平宽度，以像素为单位
+
+        返回:
+        - 估算的目标物体距离，以米为单位
+        """
+        # 计算相机的焦距（以像素为单位）
+        focal_length_pixels = (FOCAL_LENGTH_MM / SENSOR_WIDTH_MM) * self.img_width
+
+        # 计算目标物体的距离
+        distance = np.round((w_actual * focal_length_pixels) / w_pixels, 2)
+
+        return distance
 
     @staticmethod
     def compute_average_azimuth(azimuths):
