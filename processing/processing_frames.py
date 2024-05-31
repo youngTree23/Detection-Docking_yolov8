@@ -45,9 +45,9 @@ class FrameProcessor:
         # 初始化 annotated_frame
         results = self.model.predict(self.frame, conf=0.7, device='cpu', max_det=1)
         result = results[0]
-        xywh = None
+
         annotated_frame = result.plot()
-        self.plot_range(annotated_frame, 5)
+        # self.plot_range(annotated_frame, 5)
         if len(result.boxes.xywh) > 0:
             conf = result.boxes.conf.item()
             xywh = result.boxes.xywh.squeeze().tolist()
@@ -85,20 +85,20 @@ class FrameProcessor:
         theta = ((x_center - (img_width / 2)) / img_width * camera.ANGLE_SCOPE) + camera_angle
         return theta
 
-    def plot_range(self, image, angle_threshold):
-        """
-        在图像上绘制两条竖直线，表示如果目标不在这个范围内，则需要进行旋转
-        :param image:
-        :param angle_threshold:
-        :return:
-        """
-        delt_angle_pixel = angle_threshold / camera.ANGLE_SCOPE * self.img_width  # 角度阈值对应的像素值
-        line1_x = int(self.img_width / 2 - delt_angle_pixel)
-        line2_x = int(self.img_width / 2 + delt_angle_pixel)
-        color = (0, 255, 0)  # 绿色
-        thickness = 2  # 线条厚度
-        cv2.line(image, (line1_x, 0), (line1_x, self.img_height), color, thickness)
-        cv2.line(image, (line2_x, 0), (line2_x, self.img_height), color, thickness)
+    # def plot_range(self, image, angle_threshold):
+    #     """
+    #     在图像上绘制两条竖直线，表示如果目标不在这个范围内，则需要进行旋转
+    #     :param image:
+    #     :param angle_threshold:
+    #     :return:
+    #     """
+    #     delt_angle_pixel = angle_threshold / camera.ANGLE_SCOPE * self.img_width  # 角度阈值对应的像素值
+    #     line1_x = int(self.img_width / 2 - delt_angle_pixel)
+    #     line2_x = int(self.img_width / 2 + delt_angle_pixel)
+    #     color = (0, 255, 0)  # 绿色
+    #     thickness = 2  # 线条厚度
+    #     cv2.line(image, (line1_x, 0), (line1_x, self.img_height), color, thickness)
+    #     cv2.line(image, (line2_x, 0), (line2_x, self.img_height), color, thickness)
 
     def is_valid_azimuth(self, new_azimuth):
         if not self.azimuth_buffer:
