@@ -9,9 +9,10 @@ from processing import FrameProcessor
 def main():
     # 加载YOLOv8模型
     model = YOLO(r'D:\workingSpace\Projects\train240502\runs\detect\train\weights\best.pt')
-    camera_manager = CameraManager(4, (640, 480))
+    camera_manager = CameraManager(4, (640, 480))  # 设置分辨率为640x480
     img_shape = (camera_manager.width, camera_manager.height)
     frame_processor = FrameProcessor(model, img_shape)
+    print("*****YOLOv8检测模型加载成功*****\n")
     # 顺序处理每个相机
     while True:
         annotated_frames, azimuth = frame_processor.process_multiple_cameras(camera_manager.caps, CAMERA_ANGLES)

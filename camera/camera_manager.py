@@ -4,6 +4,9 @@ import cv2
 CAMERA_ANGLES = [0, 90, 180, 270]
 FOCAL_LENGTH_MM = 2.2
 SENSOR_WIDTH_MM = 18.44
+ANGLE_SCOPE = 135  # 定义相机识别的范围为135度
+
+
 class CameraManager:
     def __init__(self, num_cameras, img_shape):
         """
@@ -20,7 +23,7 @@ class CameraManager:
         if self.errors:
             print(f"以下相机未能成功打开: {self.errors}")
         else:
-            print("相机已全部开启。")
+            print("*****相机已全部开启*****\n")
 
     def turn_on_cameras(self):
         """
@@ -52,7 +55,7 @@ class CameraManager:
 
 # 示例使用
 if __name__ == "__main__":
-    camera_manager = CameraManager(num_cameras=4)
+    camera_manager = CameraManager(num_cameras=4, img_shape=(640, 480))
 
     # 关闭所有相机
     camera_manager.turn_off_cameras()

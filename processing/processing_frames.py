@@ -4,7 +4,9 @@ from collections import deque
 import cv2
 import numpy as np
 
+import camera
 from camera import FOCAL_LENGTH_MM, SENSOR_WIDTH_MM
+from utils import Fps
 
 
 class FrameProcessor:
@@ -37,17 +39,6 @@ class FrameProcessor:
         else:
             self.frame = frame
 
-    def calculate_fps(self):
-        current_time = time.time()
-        elapsed_time = current_time - self.previous_time
-        fps = 1 / elapsed_time if elapsed_time else float('inf')
-        self.previous_time = current_time
-        return fps
-
-    def overlay_fps(self, frame):
-        fps = self.calculate_fps()
-        cv2.putText(frame, f"FPS: {int(fps)}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
-
     def process_frame(self, camera_idx, camera_angle, azimuths: list):
         if self.frame is None:
             return np.zeros((self.img_height, self.img_width, 3), np.uint8), None
@@ -56,6 +47,7 @@ class FrameProcessor:
         result = results[0]
         xywh = None
         annotated_frame = result.plot()
+        self.plot_range(annotated_frame, 5)
         if len(result.boxes.xywh) > 0:
             conf = result.boxes.conf.item()
             xywh = result.boxes.xywh.squeeze().tolist()
@@ -68,7 +60,7 @@ class FrameProcessor:
             distance = self.estimate_distance(w_pixel)
             print("********************")
             print(f"{camera_idx + 1}号相机检测到目标，\n置信度为{np.round(conf, 2)},\n大致距离为{distance}m")
-        self.overlay_fps(annotated_frame)
+        _, self.previous_time = Fps.calculate_fps(self.previous_time, 1, annotated_frame)
         return annotated_frame
 
     def process_multiple_cameras(self, caps, camera_angles):
@@ -90,8 +82,23 @@ class FrameProcessor:
 
     def calculate_azimuth(self, x_center, camera_angle):
         img_width = self.img_width
-        theta = ((x_center - (img_width / 2)) / img_width * 135) + camera_angle
+        theta = ((x_center - (img_width / 2)) / img_width * camera.ANGLE_SCOPE) + camera_angle
         return theta
+
+    def plot_range(self, image, angle_threshold):
+        """
+        在图像上绘制两条竖直线，表示如果目标不在这个范围内，则需要进行旋转
+        :param image:
+        :param angle_threshold:
+        :return:
+        """
+        delt_angle_pixel = angle_threshold / camera.ANGLE_SCOPE * self.img_width  # 角度阈值对应的像素值
+        line1_x = int(self.img_width / 2 - delt_angle_pixel)
+        line2_x = int(self.img_width / 2 + delt_angle_pixel)
+        color = (0, 255, 0)  # 绿色
+        thickness = 2  # 线条厚度
+        cv2.line(image, (line1_x, 0), (line1_x, self.img_height), color, thickness)
+        cv2.line(image, (line2_x, 0), (line2_x, self.img_height), color, thickness)
 
     def is_valid_azimuth(self, new_azimuth):
         if not self.azimuth_buffer:
